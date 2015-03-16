@@ -9,9 +9,6 @@
 
 package audiocast.ui;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import android.app.Activity;
 import android.content.Context;
 import android.net.wifi.WifiManager;
@@ -25,8 +22,8 @@ import audiocast.audio.Record;
 import co324.audiocast.R;
 
 public class AudiocastActivity extends Activity {
-	final static int SAMPLE_HZ = 11025, BACKLOG = 8;
-	// final static InetSocketAddress multicast = new InetSocketAddress("224.0.0.1", 3210);
+	
+	final static int SAMPLE_HZ = 11025;
 
 	Record rec;
 	Play play;
@@ -52,9 +49,8 @@ public class AudiocastActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 
-		BlockingQueue<byte[]> buf = new ArrayBlockingQueue<byte[]>(BACKLOG);
-		rec = new Record(SAMPLE_HZ, buf);
-		play = new Play(SAMPLE_HZ, buf);
+		rec = new Record(SAMPLE_HZ);
+		play = new Play(SAMPLE_HZ);
 
 		// set Listener to Record ToggleButton
 		findViewById(R.id.Record).setOnClickListener(new OnClickListener() {

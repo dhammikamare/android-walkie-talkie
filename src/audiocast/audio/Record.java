@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.concurrent.BlockingQueue;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -28,11 +27,9 @@ public final class Record extends Thread {
 	private static final String IP = "224.2.2.3";
 	
 	final AudioRecord stream;
-	final BlockingQueue<byte[]> queue;
 
-	public Record(int sampleHz, BlockingQueue<byte[]> queue) {
-		this.queue = queue;
-
+	public Record(int sampleHz) {
+		
 		int bufsize = AudioRecord.getMinBufferSize(
 				sampleHz,
 				AudioFormat.CHANNEL_IN_MONO, 
@@ -64,13 +61,11 @@ public final class Record extends Thread {
 			while (!Thread.interrupted()) {
 				// Reads audio data from the audio hardware for recording into a buffer.
 				int len = stream.read(pkt, 0, pkt.length);
-				
-				// queue.put(pkt);
 
 				// Make and sends UDP packets to multicast group
 				sendPacket = new DatagramPacket(pkt, pkt.length, address, PORT);
 				socket.send(sendPacket);
-
+				
 				Log.d("Audiocast", "recorded " + len + " bytes");
 			}
 		} catch (IOException e) {
@@ -78,6 +73,12 @@ public final class Record extends Thread {
 		} finally {
 			stream.stop();
 			stream.release();
+			
+			try {
+				socket.leaveGroup(address);
+			} catch (IOException e) {
+				Log.e("Audiocast", e.getMessage());
+			}
 		}
 	}
 

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.concurrent.BlockingQueue;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -23,14 +22,13 @@ import android.util.Log;
 
 public final class Play extends Thread {
 
+	private static final int MAXLEN = 1024;
 	private static final int PORT = 8888;
 	private static final String IP = "224.2.2.3";
 	
 	final AudioTrack stream;
-	final BlockingQueue<byte[]> queue;
 
-	public Play(int sampleHz, BlockingQueue<byte[]> queue) {
-		this.queue = queue;
+	public Play(int sampleHz) {
 
 		int bufsize = AudioTrack.getMinBufferSize(
 				sampleHz,
@@ -59,11 +57,9 @@ public final class Play extends Thread {
 			address = InetAddress.getByName(IP);
 			socket.joinGroup(address);
 
-			byte[] inBuf = new byte[512];
+			byte[] inBuf = new byte[MAXLEN];
 
 			while (!Thread.interrupted()) {
-				// byte[] pkt = queue.take();
-
 				// Receives a packet from multicast group
 				inPacket = new DatagramPacket(inBuf, inBuf.length);
 				socket.receive(inPacket);
@@ -78,6 +74,7 @@ public final class Play extends Thread {
 		} finally {
 			stream.stop();
 			stream.release();
+			
 			try {
 				socket.leaveGroup(address);
 			} catch (IOException e) {
